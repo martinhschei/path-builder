@@ -1791,7 +1791,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -1809,6 +1808,21 @@ __webpack_require__.r(__webpack_exports__);
     this.createPolyline();
   },
   methods: {
+    remove: function remove(marker) {
+      for (var i = 0; i < this.markers.length; i++) {
+        if (this.markers[i] == marker) {
+          this.markers[i].setMap(null);
+          this.markers.splice(i, 1);
+          this.polyline.getPath().removeAt(i);
+
+          for (var j = 0; j < this.areas.length; j++) {
+            if (this.areas[i].marker == marker) {
+              this.areas.splice(i, 1);
+            }
+          }
+        }
+      }
+    },
     select: function select(area) {
       this.selectedArea = area;
     },
@@ -1837,12 +1851,17 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     addMarker: function addMarker(location, map) {
+      var _this2 = this;
+
+      this.index++;
       var marker = new google.maps.Marker({
         map: map,
         position: location,
-        label: this.areas.length.toString()
+        label: this.index.toString()
       });
-      this.markers.push(marker);
+      google.maps.event.addListener(marker, 'click', function () {
+        _this2.remove(marker);
+      });
       this.polyline.getPath().push(location);
       this.createArea(marker);
     },
@@ -1851,9 +1870,12 @@ __webpack_require__.r(__webpack_exports__);
         'radius': 10,
         'latitude': '',
         'longitude': '',
+        'marker': marker,
         'default_navigation': '',
+        'url': 'http://www.vg.no',
         'title': this.areas.length.toString()
       });
+      this.markers.push(marker);
     }
   }
 });
@@ -6317,7 +6339,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#map[data-v-3303fbfd] {\n\theight: 900px;\n}\n", ""]);
+exports.push([module.i, "\n.red[data-v-3303fbfd] {\n\tcolor: red;\n}\n#map[data-v-3303fbfd] {\n\theight: 900px;\n}\n.hand[data-v-3303fbfd] {\n\tcursor: pointer,\n}\n", ""]);
 
 // exports
 
@@ -37626,7 +37648,7 @@ var render = function() {
             ])
           : _c("div", [
               _c("div", { staticClass: "alert alert-info text-center" }, [
-                _vm._v(" Select/create area ")
+                _vm._v(" Select / create area ")
               ])
             ]),
         _vm._v(" "),
@@ -37637,26 +37659,34 @@ var render = function() {
             "ul",
             { staticClass: "list-group" },
             _vm._l(_vm.areas, function(area, index) {
-              return _c(
-                "li",
-                {
-                  staticClass: "list-group-item",
+              return _c("li", { staticClass: "hand list-group-item" }, [
+                _c(
+                  "span",
+                  {
+                    on: {
+                      click: function($event) {
+                        return _vm.select(area)
+                      }
+                    }
+                  },
+                  [
+                    _vm._v(
+                      " #" + _vm._s(index) + " - " + _vm._s(area.title) + " "
+                    )
+                  ]
+                ),
+                _vm._v(" "),
+                _c("i", {
+                  staticClass: "fa fa-times-circle float-right red pt-1",
+                  staticStyle: { "font-size": "1.2em" },
                   on: {
                     click: function($event) {
-                      return _vm.select(area)
+                      $event.preventDefault()
+                      return _vm.remove(area, index)
                     }
                   }
-                },
-                [
-                  _vm._v(
-                    "\n\t\t\t\t\t\t#" +
-                      _vm._s(index) +
-                      " - " +
-                      _vm._s(area.title) +
-                      "\n\t\t\t\t\t"
-                  )
-                ]
-              )
+                })
+              ])
             }),
             0
           )

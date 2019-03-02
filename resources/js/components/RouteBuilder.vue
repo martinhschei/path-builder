@@ -9,16 +9,15 @@
 					<input type="text" class="form-control mb-2" v-model="selectedArea.title" placeholder="Title">
 					<input type="text" class="form-control mb-2" v-model="selectedArea.radius" placeholder="Radius">
 					<input type="text" class="form-control mb-2" v-model="selectedArea.default_navigation" placeholder="Default navigation">
-
 				</div>
 				<div v-else>
-					<div class="alert alert-info text-center"> Select/create area </div>
+					<div class="alert alert-info text-center"> Select / create area </div>
 				</div>
 				<hr>
 				<div class="areas">
 					<ul class="list-group">
-						<li @click="select(area)" v-for="(area, index) in areas" class="list-group-item">
-							#{{ index }} - {{ area.title }}
+						<li v-for="(area, index) in areas" class="hand list-group-item">
+							<span @click="select(area)"> #{{ index }} - {{ area.title }} </span> <i @click.prevent="remove(area, index)" class="fa fa-times-circle float-right red pt-1" style="font-size:1.2em"> </i>
 						</li>
 					</ul>
 				</div>
@@ -45,8 +44,23 @@
 			this.registerEvents();
 			this.createPolyline();
 		},
-		
+
 		methods: {
+			remove(marker) {
+				for (let i = 0; i < this.markers.length; i++) {
+					if (this.markers[i] == marker) {
+						this.markers[i].setMap(null);
+						this.markers.splice(i, 1);
+						this.polyline.getPath().removeAt(i);
+						for (let j = 0; j < this.areas.length; j++) {
+							if (this.areas[i].marker == marker) {
+								this.areas.splice(i, 1);
+							}
+						}
+					}
+				}
+			},
+
 			select(area) {
 				this.selectedArea = area;
 			},
@@ -74,12 +88,17 @@
 			},
 
 			addMarker(location, map) {
+				this.index++;
 				let marker = new google.maps.Marker({
 					map: map,
 					position: location,
-					label: this.areas.length.toString(),
+					label: this.index.toString(),
 				});
-				this.markers.push(marker);
+
+				google.maps.event.addListener(marker, 'click', () => {
+					this.remove(marker);
+				});
+
 				this.polyline.getPath().push(location);
 				this.createArea(marker);
 			},
@@ -89,16 +108,28 @@
 					'radius': 10,
 					'latitude' : '',
 					'longitude': '',
+					'marker': marker,
 					'default_navigation': '',
+					'url': 'http://www.vg.no',
 					'title': this.areas.length.toString(),
 				});
+
+				this.markers.push(marker);
 			},
 		}
 	};
 </script>
 
 <style scoped>
+	.red {
+		color: red;
+	}
+
 	#map {
 		height: 900px;
+	}
+
+	.hand {
+		cursor: pointer,
 	}
 </style>
