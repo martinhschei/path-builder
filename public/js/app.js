@@ -1801,6 +1801,7 @@ __webpack_require__.r(__webpack_exports__);
       waypoints: [],
       polyline: null,
       draggedMarker: null,
+      selectedMarker: null,
       selectedWaypoint: null
     };
   },
@@ -1826,12 +1827,15 @@ __webpack_require__.r(__webpack_exports__);
           for (var j = 0; j < this.waypoints.length; j++) {
             if (this.waypoints[i].marker == waypoint.marker) {
               this.waypoints.splice(i, 1);
+              break;
             }
           }
+
+          break;
         }
       }
 
-      this.selectedWaypoint = null;
+      this.selectedWaypoint = null; // TODO: recalc bearings and distances
     },
     select: function select(waypoint) {
       this.selectedWaypoint = waypoint;
@@ -1881,8 +1885,17 @@ __webpack_require__.r(__webpack_exports__);
         }
       }
     },
-    addMarker: function addMarker(location, map) {
+    selectWaypointFromMarker: function selectWaypointFromMarker(marker) {
       var _this3 = this;
+
+      this.waypoints.forEach(function (waypoint) {
+        if (waypoint.marker == marker) {
+          _this3.selectedWaypoint = waypoint;
+        }
+      });
+    },
+    addMarker: function addMarker(location, map) {
+      var _this4 = this;
 
       var marker = new google.maps.Marker({
         map: map,
@@ -1893,11 +1906,14 @@ __webpack_require__.r(__webpack_exports__);
         }
       });
       google.maps.event.addListener(marker, 'click', function () {
-        _this3.markers.forEach(function (m) {
+        _this4.markers.forEach(function (m) {
           m.setIcon("http://maps.google.com/mapfiles/ms/icons/blue-dot.png");
         });
 
         marker.setIcon("http://maps.google.com/mapfiles/ms/icons/yellow-dot.png");
+        _this4.selectedMarker = marker;
+
+        _this4.selectWaypointFromMarker(marker);
       });
       marker.addListener('drag', this.onMarkerDrag);
       marker.addListener('dragend', this.onMarkerDragEnd);
@@ -1905,17 +1921,67 @@ __webpack_require__.r(__webpack_exports__);
       this.markers.push(marker);
       this.createWaypoint(marker);
     },
+    calcBearing: function calcBearing(fromLatLng, toLatLng) {
+      return google.maps.geometry.spherical.computeHeading(fromLatLng, toLatLng);
+    },
+    calcDistance: function calcDistance(fromLatLng, toLatLng) {
+      return google.maps.geometry.spherical.computeDistanceBetween(fromLatLng, toLatLng);
+    },
+    calcAngle: function calcAngle(fromBearing, toBearing) {
+      if (fromBearing == undefined || toBearing == undefined) {
+        return null;
+      }
+
+      var angle = Math.abs(fromBearing - toBearing);
+
+      if (angle > 180) {
+        angle = 360 - angle;
+      }
+
+      return angle;
+    },
+    getNavigation: function getNavigation(bearing, angle, distance) {
+      console.log(bearing, angle, distance);
+
+      if (angle < 10) {
+        return "Fortsett rett fram de neste ".concat(distance, " meterne");
+      }
+
+      if (angle > 10 && angle < 25) {
+        if (bearing < 0) {
+          return "Fortsett svakt venstre over de neste ".concat(distance, " meterne");
+        } else {
+          return "Fortsett svakt h\xF8yre over de neste ".concat(distance, " meterne");
+        }
+      } // TODO: more finegrained.
+
+    },
     createWaypoint: function createWaypoint(marker) {
+      var bearing;
+      var distance;
+      var angle;
+      var lastMarker = this.markers[this.markers.length - 2];
+
+      if (lastMarker) {
+        bearing = this.calcBearing(lastMarker.position, marker.position);
+        distance = this.calcDistance(lastMarker.position, marker.position);
+        angle = this.calcAngle(this.waypoints[this.waypoints.length - 1].bearing, bearing);
+      }
+
       this.waypoints.push({
         'url': '',
         'radius': 10,
         'latitude': '',
         'longitude': '',
+        'heading': null,
         'marker': marker,
+        'angle': angle,
+        'bearing': bearing,
         'searchable': false,
+        'distance': distance,
         'navigateable': false,
-        'default_navigation': '',
-        'title': this.waypoints.length.toString()
+        'title': this.waypoints.length.toString(),
+        'default_navigation': this.getNavigation(bearing, angle, distance)
       });
     }
   }
