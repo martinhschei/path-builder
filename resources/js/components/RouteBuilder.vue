@@ -36,16 +36,22 @@
 				markers: [],
 				polyline: null,
 				selectedArea: null,
+				draggedMarker: null,
 			}
 		},
 		
 		mounted() {
 			this.loadMap();
+			this.setMapOptions();
 			this.registerEvents();
 			this.createPolyline();
 		},
 
 		methods: {
+			setMapOptions() {
+				this.map.setOptions({draggableCursor:'crosshair'});
+			},
+
 			remove(marker) {
 				for (let i = 0; i < this.markers.length; i++) {
 					if (this.markers[i] == marker) {
@@ -64,7 +70,7 @@
 			select(area) {
 				this.selectedArea = area;
 			},
-
+			
 			createPolyline() {
 				this.polyline = new google.maps.Polyline({
 				    map: this.map,
@@ -86,20 +92,44 @@
 		         	center: {lat: 59.412472, lng: 10.485530},
 		        });
 			},
+			
+			onMarkerDrag(marker) {
+				this.draggedMarker = marker;
+				// drag start
+			},
+
+			updateMarkerLocation(marker, location) {
+			   for (let i in this.markers) {
+			     if (this.markers[i] == marker) {
+			        this.markers[i].location = newLocation;
+			        break;
+			     }
+			   }
+			},
+
+			onMarkerDragEnd(marker) {
+				console.log(marker.latLng);
+				this.polyline.getPath().clear();
+				this.updateMarkerLocation(this.draggedMarker, marker.latLng);
+				this.markers.forEach((marker) => {
+					this.polyline.getPath().push(marker.position);
+				});
+				this.draggedMarker = null;
+			},
 
 			addMarker(location, map) {
 				this.index++;
 				let marker = new google.maps.Marker({
 					map: map,
+					draggable:true,
 					position: location,
 					label: this.index.toString(),
 				});
-
-				google.maps.event.addListener(marker, 'click', () => {
-					this.remove(marker);
-				});
+				marker.addListener('drag', this.onMarkerDrag);
+    			marker.addListener('dragend', this.onMarkerDragEnd);
 
 				this.polyline.getPath().push(location);
+				this.markers.push(marker);
 				this.createArea(marker);
 			},
 
@@ -110,11 +140,8 @@
 					'longitude': '',
 					'marker': marker,
 					'default_navigation': '',
-					'url': 'http://www.vg.no',
 					'title': this.areas.length.toString(),
 				});
-
-				this.markers.push(marker);
 			},
 		}
 	};

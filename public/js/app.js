@@ -1799,15 +1799,22 @@ __webpack_require__.r(__webpack_exports__);
       areas: [],
       markers: [],
       polyline: null,
-      selectedArea: null
+      selectedArea: null,
+      draggedMarker: null
     };
   },
   mounted: function mounted() {
     this.loadMap();
+    this.setMapOptions();
     this.registerEvents();
     this.createPolyline();
   },
   methods: {
+    setMapOptions: function setMapOptions() {
+      this.map.setOptions({
+        draggableCursor: 'crosshair'
+      });
+    },
     remove: function remove(marker) {
       for (var i = 0; i < this.markers.length; i++) {
         if (this.markers[i] == marker) {
@@ -1850,19 +1857,40 @@ __webpack_require__.r(__webpack_exports__);
         }
       });
     },
-    addMarker: function addMarker(location, map) {
+    onMarkerDrag: function onMarkerDrag(marker) {
+      this.draggedMarker = marker; // drag start
+    },
+    updateMarkerLocation: function updateMarkerLocation(marker, location) {
+      for (var i in this.markers) {
+        if (this.markers[i] == marker) {
+          this.markers[i].location = newLocation;
+          break;
+        }
+      }
+    },
+    onMarkerDragEnd: function onMarkerDragEnd(marker) {
       var _this2 = this;
 
+      console.log(marker.latLng);
+      this.polyline.getPath().clear();
+      this.updateMarkerLocation(this.draggedMarker, marker.latLng);
+      this.markers.forEach(function (marker) {
+        _this2.polyline.getPath().push(marker.position);
+      });
+      this.draggedMarker = null;
+    },
+    addMarker: function addMarker(location, map) {
       this.index++;
       var marker = new google.maps.Marker({
         map: map,
+        draggable: true,
         position: location,
         label: this.index.toString()
       });
-      google.maps.event.addListener(marker, 'click', function () {
-        _this2.remove(marker);
-      });
+      marker.addListener('drag', this.onMarkerDrag);
+      marker.addListener('dragend', this.onMarkerDragEnd);
       this.polyline.getPath().push(location);
+      this.markers.push(marker);
       this.createArea(marker);
     },
     createArea: function createArea(marker) {
@@ -1872,10 +1900,8 @@ __webpack_require__.r(__webpack_exports__);
         'longitude': '',
         'marker': marker,
         'default_navigation': '',
-        'url': 'http://www.vg.no',
         'title': this.areas.length.toString()
       });
-      this.markers.push(marker);
     }
   }
 });
