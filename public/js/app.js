@@ -1791,6 +1791,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -1832,13 +1834,12 @@ __webpack_require__.r(__webpack_exports__);
       this.selectedWaypoint = null;
     },
     select: function select(waypoint) {
-      console.log(waypoint);
       this.selectedWaypoint = waypoint;
     },
     createPolyline: function createPolyline() {
       this.polyline = new google.maps.Polyline({
         map: this.map,
-        strokeWeight: 1,
+        strokeWeight: 3,
         strokeOpacity: 2.0,
         strokeColor: '#000000'
       });
@@ -1881,11 +1882,22 @@ __webpack_require__.r(__webpack_exports__);
       }
     },
     addMarker: function addMarker(location, map) {
+      var _this3 = this;
+
       var marker = new google.maps.Marker({
         map: map,
         draggable: true,
         position: location,
-        label: this.waypoints.length.toString()
+        icon: {
+          url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+        }
+      });
+      google.maps.event.addListener(marker, 'click', function () {
+        _this3.markers.forEach(function (m) {
+          m.setIcon("http://maps.google.com/mapfiles/ms/icons/blue-dot.png");
+        });
+
+        marker.setIcon("http://maps.google.com/mapfiles/ms/icons/yellow-dot.png");
       });
       marker.addListener('drag', this.onMarkerDrag);
       marker.addListener('dragend', this.onMarkerDragEnd);
@@ -1895,10 +1907,13 @@ __webpack_require__.r(__webpack_exports__);
     },
     createWaypoint: function createWaypoint(marker) {
       this.waypoints.push({
+        'url': '',
         'radius': 10,
         'latitude': '',
         'longitude': '',
         'marker': marker,
+        'searchable': false,
+        'navigateable': false,
         'default_navigation': '',
         'title': this.waypoints.length.toString()
       });
@@ -6365,7 +6380,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\nul[data-v-3303fbfd] {\n\twidth:280px;\n}\n.red[data-v-3303fbfd] {\n\tcolor: red;\n}\n#map[data-v-3303fbfd] {\n\theight: 1000px;\n}\n.hand[data-v-3303fbfd] {\n\tcursor: pointer,\n}\n.waypoints[data-v-3303fbfd] {\n\twidth:300px;\n\theight: 1000px;\n\toverflow-y: auto;\n}\n", ""]);
+exports.push([module.i, "\n.red[data-v-3303fbfd] {\n\tcolor: red;\n}\n#map[data-v-3303fbfd] {\n\theight: 950px;\n}\n.hand[data-v-3303fbfd] {\n\tcursor: pointer,\n}\n.waypoints[data-v-3303fbfd] {\n\theight: 900px;\n\toverflow-y: auto;\n}\n", ""]);
 
 // exports
 
@@ -37644,6 +37659,32 @@ var render = function() {
                     _vm.$set(
                       _vm.selectedWaypoint,
                       "radius",
+                      $event.target.value
+                    )
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _c("input", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.selectedWaypoint.video_url,
+                    expression: "selectedWaypoint.video_url"
+                  }
+                ],
+                staticClass: "form-control mb-2",
+                attrs: { type: "text", placeholder: "Video url" },
+                domProps: { value: _vm.selectedWaypoint.video_url },
+                on: {
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.$set(
+                      _vm.selectedWaypoint,
+                      "video_url",
                       $event.target.value
                     )
                   }

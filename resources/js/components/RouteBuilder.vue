@@ -8,7 +8,9 @@
 				<div v-if="selectedWaypoint != null" class="createWaypoint-info">
 					<input type="text" class="form-control mb-2" v-model="selectedWaypoint.title" placeholder="Title">
 					<input type="text" class="form-control mb-2" v-model="selectedWaypoint.radius" placeholder="Radius">
+					<input type="text" class="form-control mb-2" v-model="selectedWaypoint.video_url" placeholder="Video url">
 					<input type="text" class="form-control mb-2" v-model="selectedWaypoint.default_navigation" placeholder="Default navigation">
+					<input type="text" class="form-control mb-2" v-model="selectedWaypoint"
 				</div>
 				<div v-else>
 					<div class="alert alert-info text-center"> Select / create waypoint </div>
@@ -68,14 +70,13 @@
 			},
 
 			select(waypoint) {
-				console.log(waypoint);
 				this.selectedWaypoint = waypoint;
 			},
-			
+				
 			createPolyline() {
 				this.polyline = new google.maps.Polyline({
 				    map: this.map,
-				    strokeWeight: 1,
+				    strokeWeight: 3,
 				    strokeOpacity: 2.0,
 				    strokeColor: '#000000',
 				});
@@ -121,8 +122,19 @@
 					map: map,
 					draggable:true,
 					position: location,
-					label: this.waypoints.length.toString(),
+					icon : { 
+						url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" 
+					},
 				});
+
+				google.maps.event.addListener(marker, 'click', () => {
+					this.markers.forEach((m) => {
+						m.setIcon("http://maps.google.com/mapfiles/ms/icons/blue-dot.png");
+					});
+					marker.setIcon("http://maps.google.com/mapfiles/ms/icons/yellow-dot.png");
+					
+				});
+
 				marker.addListener('drag', this.onMarkerDrag);
     			marker.addListener('dragend', this.onMarkerDragEnd);
 
@@ -133,10 +145,13 @@
 
 			createWaypoint(marker) {
 				this.waypoints.push({
+					'url': '',
 					'radius': 10,
 					'latitude' : '',
 					'longitude': '',
 					'marker': marker,
+					'searchable': false,
+					'navigateable': false,
 					'default_navigation': '',
 					'title': this.waypoints.length.toString(),
 				});
@@ -146,23 +161,20 @@
 </script>
 
 <style scoped>
-	ul {
-		width:280px;
-	}
 	.red {
 		color: red;
 	}
 
 	#map {
-		height: 1000px;
+		height: 950px;
 	}
 
 	.hand {
 		cursor: pointer,
 	}
+
 	.waypoints {
-		width:300px;
-		height: 1000px;
+		height: 900px;
 		overflow-y: auto;
 	}
 </style>
