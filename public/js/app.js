@@ -1828,8 +1828,11 @@ __webpack_require__.r(__webpack_exports__);
           }
         }
       }
+
+      this.selectedWaypoint = null;
     },
     select: function select(waypoint) {
+      console.log(waypoint);
       this.selectedWaypoint = waypoint;
     },
     createPolyline: function createPolyline() {
@@ -6362,7 +6365,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.red[data-v-3303fbfd] {\n\tcolor: red;\n}\n#map[data-v-3303fbfd] {\n\theight: 900px;\n}\n.hand[data-v-3303fbfd] {\n\tcursor: pointer,\n}\n", ""]);
+exports.push([module.i, "\nul[data-v-3303fbfd] {\n\twidth:280px;\n}\n.red[data-v-3303fbfd] {\n\tcolor: red;\n}\n#map[data-v-3303fbfd] {\n\theight: 1000px;\n}\n.hand[data-v-3303fbfd] {\n\tcursor: pointer,\n}\n.waypoints[data-v-3303fbfd] {\n\twidth:300px;\n\theight: 1000px;\n\toverflow-y: auto;\n}\n", ""]);
 
 // exports
 
@@ -37686,10 +37689,11 @@ var render = function() {
             "ul",
             { staticClass: "list-group" },
             _vm._l(_vm.waypoints, function(waypoint, index) {
-              return _c("li", { staticClass: "hand list-group-item" }, [
+              return _c("li", { staticClass: "hand list-group-item mb-2" }, [
                 _c(
                   "span",
                   {
+                    staticStyle: { "font-size": "1.2em" },
                     on: {
                       click: function($event) {
                         return _vm.select(waypoint)
@@ -37708,7 +37712,7 @@ var render = function() {
                 ),
                 _vm._v(" "),
                 _c("i", {
-                  staticClass: "fa fa-times-circle float-right red pt-1",
+                  staticClass: "fa fa-times-circle float-right red pt-1 hand",
                   staticStyle: { "font-size": "1.2em" },
                   on: {
                     click: function($event) {

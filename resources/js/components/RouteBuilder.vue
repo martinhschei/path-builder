@@ -16,8 +16,8 @@
 				<hr>
 				<div class="waypoints">
 					<ul class="list-group">
-						<li v-for="(waypoint, index) in waypoints" class="hand list-group-item">
-							<span @click="select(waypoint)"> #{{ index }} - {{ waypoint.title }} </span> <i @click.prevent="remove(waypoint, index)" class="fa fa-times-circle float-right red pt-1" style="font-size:1.2em"> </i>
+						<li v-for="(waypoint, index) in waypoints" class="hand list-group-item mb-2">
+							<span style="font-size:1.2em" @click="select(waypoint)"> #{{ index }} - {{ waypoint.title }} </span> <i @click.prevent="remove(waypoint, index)" class="fa fa-times-circle float-right red pt-1 hand" style="font-size:1.2em"> </i>
 						</li>
 					</ul>
 				</div>
@@ -64,9 +64,11 @@
 						}
 					}
 				}
+				this.selectedWaypoint = null;
 			},
 
 			select(waypoint) {
+				console.log(waypoint);
 				this.selectedWaypoint = waypoint;
 			},
 			
@@ -95,7 +97,7 @@
 			onMarkerDrag(marker) {
 				this.draggedMarker = marker;
 			},
-			
+
 			onMarkerDragEnd(marker) {
 				this.polyline.getPath().clear();
 				this.updateMarkerLocation(this.draggedMarker, marker.latLng);
@@ -144,15 +146,23 @@
 </script>
 
 <style scoped>
+	ul {
+		width:280px;
+	}
 	.red {
 		color: red;
 	}
 
 	#map {
-		height: 900px;
+		height: 1000px;
 	}
 
 	.hand {
 		cursor: pointer,
+	}
+	.waypoints {
+		width:300px;
+		height: 1000px;
+		overflow-y: auto;
 	}
 </style>
