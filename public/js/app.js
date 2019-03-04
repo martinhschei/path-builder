@@ -1794,13 +1794,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
-      index: 0,
       map: null,
-      areas: [],
       markers: [],
+      waypoints: [],
       polyline: null,
-      selectedArea: null,
-      draggedMarker: null
+      draggedMarker: null,
+      selectedWaypoint: null
     };
   },
   mounted: function mounted() {
@@ -1815,23 +1814,23 @@ __webpack_require__.r(__webpack_exports__);
         draggableCursor: 'crosshair'
       });
     },
-    remove: function remove(marker) {
+    remove: function remove(waypoint, index) {
       for (var i = 0; i < this.markers.length; i++) {
-        if (this.markers[i] == marker) {
+        if (this.markers[i] == waypoint.marker) {
           this.markers[i].setMap(null);
           this.markers.splice(i, 1);
           this.polyline.getPath().removeAt(i);
 
-          for (var j = 0; j < this.areas.length; j++) {
-            if (this.areas[i].marker == marker) {
-              this.areas.splice(i, 1);
+          for (var j = 0; j < this.waypoints.length; j++) {
+            if (this.waypoints[i].marker == waypoint.marker) {
+              this.waypoints.splice(i, 1);
             }
           }
         }
       }
     },
-    select: function select(area) {
-      this.selectedArea = area;
+    select: function select(waypoint) {
+      this.selectedWaypoint = waypoint;
     },
     createPolyline: function createPolyline() {
       this.polyline = new google.maps.Polyline({
@@ -1858,7 +1857,17 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     onMarkerDrag: function onMarkerDrag(marker) {
-      this.draggedMarker = marker; // drag start
+      this.draggedMarker = marker;
+    },
+    onMarkerDragEnd: function onMarkerDragEnd(marker) {
+      var _this2 = this;
+
+      this.polyline.getPath().clear();
+      this.updateMarkerLocation(this.draggedMarker, marker.latLng);
+      this.markers.forEach(function (marker) {
+        _this2.polyline.getPath().push(marker.position);
+      });
+      this.draggedMarker = null;
     },
     updateMarkerLocation: function updateMarkerLocation(marker, location) {
       for (var i in this.markers) {
@@ -1868,39 +1877,27 @@ __webpack_require__.r(__webpack_exports__);
         }
       }
     },
-    onMarkerDragEnd: function onMarkerDragEnd(marker) {
-      var _this2 = this;
-
-      console.log(marker.latLng);
-      this.polyline.getPath().clear();
-      this.updateMarkerLocation(this.draggedMarker, marker.latLng);
-      this.markers.forEach(function (marker) {
-        _this2.polyline.getPath().push(marker.position);
-      });
-      this.draggedMarker = null;
-    },
     addMarker: function addMarker(location, map) {
-      this.index++;
       var marker = new google.maps.Marker({
         map: map,
         draggable: true,
         position: location,
-        label: this.index.toString()
+        label: this.waypoints.length.toString()
       });
       marker.addListener('drag', this.onMarkerDrag);
       marker.addListener('dragend', this.onMarkerDragEnd);
       this.polyline.getPath().push(location);
       this.markers.push(marker);
-      this.createArea(marker);
+      this.createWaypoint(marker);
     },
-    createArea: function createArea(marker) {
-      this.areas.push({
+    createWaypoint: function createWaypoint(marker) {
+      this.waypoints.push({
         'radius': 10,
         'latitude': '',
         'longitude': '',
         'marker': marker,
         'default_navigation': '',
-        'title': this.areas.length.toString()
+        'title': this.waypoints.length.toString()
       });
     }
   }
@@ -37600,26 +37597,26 @@ var render = function() {
       _vm._m(0),
       _vm._v(" "),
       _c("div", { staticClass: "col-md-4" }, [
-        _vm.selectedArea != null
-          ? _c("div", { staticClass: "area-info" }, [
+        _vm.selectedWaypoint != null
+          ? _c("div", { staticClass: "createWaypoint-info" }, [
               _c("input", {
                 directives: [
                   {
                     name: "model",
                     rawName: "v-model",
-                    value: _vm.selectedArea.title,
-                    expression: "selectedArea.title"
+                    value: _vm.selectedWaypoint.title,
+                    expression: "selectedWaypoint.title"
                   }
                 ],
                 staticClass: "form-control mb-2",
                 attrs: { type: "text", placeholder: "Title" },
-                domProps: { value: _vm.selectedArea.title },
+                domProps: { value: _vm.selectedWaypoint.title },
                 on: {
                   input: function($event) {
                     if ($event.target.composing) {
                       return
                     }
-                    _vm.$set(_vm.selectedArea, "title", $event.target.value)
+                    _vm.$set(_vm.selectedWaypoint, "title", $event.target.value)
                   }
                 }
               }),
@@ -37629,42 +37626,46 @@ var render = function() {
                   {
                     name: "model",
                     rawName: "v-model",
-                    value: _vm.selectedArea.radius,
-                    expression: "selectedArea.radius"
+                    value: _vm.selectedWaypoint.radius,
+                    expression: "selectedWaypoint.radius"
                   }
                 ],
                 staticClass: "form-control mb-2",
                 attrs: { type: "text", placeholder: "Radius" },
-                domProps: { value: _vm.selectedArea.radius },
-                on: {
-                  input: function($event) {
-                    if ($event.target.composing) {
-                      return
-                    }
-                    _vm.$set(_vm.selectedArea, "radius", $event.target.value)
-                  }
-                }
-              }),
-              _vm._v(" "),
-              _c("input", {
-                directives: [
-                  {
-                    name: "model",
-                    rawName: "v-model",
-                    value: _vm.selectedArea.default_navigation,
-                    expression: "selectedArea.default_navigation"
-                  }
-                ],
-                staticClass: "form-control mb-2",
-                attrs: { type: "text", placeholder: "Default navigation" },
-                domProps: { value: _vm.selectedArea.default_navigation },
+                domProps: { value: _vm.selectedWaypoint.radius },
                 on: {
                   input: function($event) {
                     if ($event.target.composing) {
                       return
                     }
                     _vm.$set(
-                      _vm.selectedArea,
+                      _vm.selectedWaypoint,
+                      "radius",
+                      $event.target.value
+                    )
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _c("input", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.selectedWaypoint.default_navigation,
+                    expression: "selectedWaypoint.default_navigation"
+                  }
+                ],
+                staticClass: "form-control mb-2",
+                attrs: { type: "text", placeholder: "Default navigation" },
+                domProps: { value: _vm.selectedWaypoint.default_navigation },
+                on: {
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.$set(
+                      _vm.selectedWaypoint,
                       "default_navigation",
                       $event.target.value
                     )
@@ -37674,30 +37675,34 @@ var render = function() {
             ])
           : _c("div", [
               _c("div", { staticClass: "alert alert-info text-center" }, [
-                _vm._v(" Select / create area ")
+                _vm._v(" Select / create waypoint ")
               ])
             ]),
         _vm._v(" "),
         _c("hr"),
         _vm._v(" "),
-        _c("div", { staticClass: "areas" }, [
+        _c("div", { staticClass: "waypoints" }, [
           _c(
             "ul",
             { staticClass: "list-group" },
-            _vm._l(_vm.areas, function(area, index) {
+            _vm._l(_vm.waypoints, function(waypoint, index) {
               return _c("li", { staticClass: "hand list-group-item" }, [
                 _c(
                   "span",
                   {
                     on: {
                       click: function($event) {
-                        return _vm.select(area)
+                        return _vm.select(waypoint)
                       }
                     }
                   },
                   [
                     _vm._v(
-                      " #" + _vm._s(index) + " - " + _vm._s(area.title) + " "
+                      " #" +
+                        _vm._s(index) +
+                        " - " +
+                        _vm._s(waypoint.title) +
+                        " "
                     )
                   ]
                 ),
@@ -37708,7 +37713,7 @@ var render = function() {
                   on: {
                     click: function($event) {
                       $event.preventDefault()
-                      return _vm.remove(area, index)
+                      return _vm.remove(waypoint, index)
                     }
                   }
                 })

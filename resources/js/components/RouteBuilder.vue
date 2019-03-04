@@ -5,19 +5,19 @@
 				<div id="map"> </div>
 			</div>
 			<div class="col-md-4">
-				<div v-if="selectedArea != null" class="area-info">
-					<input type="text" class="form-control mb-2" v-model="selectedArea.title" placeholder="Title">
-					<input type="text" class="form-control mb-2" v-model="selectedArea.radius" placeholder="Radius">
-					<input type="text" class="form-control mb-2" v-model="selectedArea.default_navigation" placeholder="Default navigation">
+				<div v-if="selectedWaypoint != null" class="createWaypoint-info">
+					<input type="text" class="form-control mb-2" v-model="selectedWaypoint.title" placeholder="Title">
+					<input type="text" class="form-control mb-2" v-model="selectedWaypoint.radius" placeholder="Radius">
+					<input type="text" class="form-control mb-2" v-model="selectedWaypoint.default_navigation" placeholder="Default navigation">
 				</div>
 				<div v-else>
-					<div class="alert alert-info text-center"> Select / create area </div>
+					<div class="alert alert-info text-center"> Select / create waypoint </div>
 				</div>
 				<hr>
-				<div class="areas">
+				<div class="waypoints">
 					<ul class="list-group">
-						<li v-for="(area, index) in areas" class="hand list-group-item">
-							<span @click="select(area)"> #{{ index }} - {{ area.title }} </span> <i @click.prevent="remove(area, index)" class="fa fa-times-circle float-right red pt-1" style="font-size:1.2em"> </i>
+						<li v-for="(waypoint, index) in waypoints" class="hand list-group-item">
+							<span @click="select(waypoint)"> #{{ index }} - {{ waypoint.title }} </span> <i @click.prevent="remove(waypoint, index)" class="fa fa-times-circle float-right red pt-1" style="font-size:1.2em"> </i>
 						</li>
 					</ul>
 				</div>
@@ -30,13 +30,12 @@
 	export default {
 		data() {
 			return {
-				index: 0,
 				map: null,
-				areas: [],
 				markers: [],
+				waypoints: [],
 				polyline: null,
-				selectedArea: null,
 				draggedMarker: null,
+				selectedWaypoint: null,
 			}
 		},
 		
@@ -52,23 +51,23 @@
 				this.map.setOptions({draggableCursor:'crosshair'});
 			},
 
-			remove(marker) {
+			remove(waypoint, index) {
 				for (let i = 0; i < this.markers.length; i++) {
-					if (this.markers[i] == marker) {
+					if (this.markers[i] == waypoint.marker) {
 						this.markers[i].setMap(null);
 						this.markers.splice(i, 1);
 						this.polyline.getPath().removeAt(i);
-						for (let j = 0; j < this.areas.length; j++) {
-							if (this.areas[i].marker == marker) {
-								this.areas.splice(i, 1);
+						for (let j = 0; j < this.waypoints.length; j++) {
+							if (this.waypoints[i].marker == waypoint.marker) {
+								this.waypoints.splice(i, 1);
 							}
 						}
 					}
 				}
 			},
 
-			select(area) {
-				this.selectedArea = area;
+			select(waypoint) {
+				this.selectedWaypoint = waypoint;
 			},
 			
 			createPolyline() {
@@ -95,7 +94,15 @@
 			
 			onMarkerDrag(marker) {
 				this.draggedMarker = marker;
-				// drag start
+			},
+			
+			onMarkerDragEnd(marker) {
+				this.polyline.getPath().clear();
+				this.updateMarkerLocation(this.draggedMarker, marker.latLng);
+				this.markers.forEach((marker) => {
+					this.polyline.getPath().push(marker.position);
+				});
+				this.draggedMarker = null;
 			},
 
 			updateMarkerLocation(marker, location) {
@@ -107,40 +114,29 @@
 			   }
 			},
 
-			onMarkerDragEnd(marker) {
-				console.log(marker.latLng);
-				this.polyline.getPath().clear();
-				this.updateMarkerLocation(this.draggedMarker, marker.latLng);
-				this.markers.forEach((marker) => {
-					this.polyline.getPath().push(marker.position);
-				});
-				this.draggedMarker = null;
-			},
-
 			addMarker(location, map) {
-				this.index++;
 				let marker = new google.maps.Marker({
 					map: map,
 					draggable:true,
 					position: location,
-					label: this.index.toString(),
+					label: this.waypoints.length.toString(),
 				});
 				marker.addListener('drag', this.onMarkerDrag);
     			marker.addListener('dragend', this.onMarkerDragEnd);
 
 				this.polyline.getPath().push(location);
 				this.markers.push(marker);
-				this.createArea(marker);
+				this.createWaypoint(marker);
 			},
 
-			createArea(marker) {
-				this.areas.push({
+			createWaypoint(marker) {
+				this.waypoints.push({
 					'radius': 10,
 					'latitude' : '',
 					'longitude': '',
 					'marker': marker,
 					'default_navigation': '',
-					'title': this.areas.length.toString(),
+					'title': this.waypoints.length.toString(),
 				});
 			},
 		}
